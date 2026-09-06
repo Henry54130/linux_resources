@@ -1,0 +1,30 @@
+services:
+  wolf-desktop:
+    build:
+      context: .
+      dockerfile: Dockerfile.xfce
+      args:
+        USERNAME: ${USER:-retro}
+        USER_UID: ${USER_UID:-1000}
+        USER_GID: ${USER_GID:-1000}
+    image: wolf-desktop:custom
+    entrypoint: ["true"]
+
+  wolf:
+    image: ghcr.io/games-on-whales/wolf:stable
+    depends_on:
+      wolf-desktop:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    network_mode: host
+    ipc: host
+    environment:
+      - WOLF_RENDER_NODE=/dev/dri/renderD128
+    volumes:
+      - /etc/wolf:/etc/wolf
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /dev/dri:/dev/dri
+      - /dev/uinput:/dev/uinput
+    device_cgroup_rules:
+      - 'c 13:* rmw'
+      - 'c 226:* rmw'
