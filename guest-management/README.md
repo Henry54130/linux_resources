@@ -5,7 +5,7 @@
 請直接打開終端機，複製貼上下列指令並按 Enter（輸入開機密碼）：
 
 ```bash
-bash -c "$(curl -fsSL [https://github.com/Henry54130/linux-resource/archive/refs/heads/main.tar.gz](https://github.com/Henry54130/linux-resource/archive/refs/heads/main.tar.gz) | tar -xz && cd linux-resource-main/guest-management && sudo ./install.sh && cd ../.. && rm -rf linux-resource-main)"
+bash -c "$(curl -fsSL https://github.com/Henry54130/linux_resources/archive/refs/heads/main.tar.gz | tar -xz && cd linux_resources-main/guest-management && sudo ./install.sh && cd ../.. && rm -rf linux_resources-main)"
 ```
 
 ---

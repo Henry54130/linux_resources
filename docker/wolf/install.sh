@@ -35,7 +35,7 @@ else
 fi
 
 # 4. 下載設定檔
-BASE_URL="https://raw.githubusercontent.com/Henry54130/linux_resources/main"
+BASE_URL="https://raw.githubusercontent.com/Henry54130/linux_resources/main/docker/wolf"
 curl -fsSL "$BASE_URL/Dockerfile.xfce" -o Dockerfile.xfce
 curl -fsSL "$BASE_URL/docker-compose.yml" -o docker-compose.yml
 

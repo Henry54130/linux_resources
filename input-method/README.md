@@ -8,22 +8,22 @@
 
 ### 1. 全部一起裝（Fcitx5 + 小麥注音 + 拼音）
 ```bash
-bash -c "$(curl -fsSL https://github.com/Henry54130/linux-resource/archive/refs/heads/main.tar.gz | tar -xz && cd linux-resource-main/input-method && sudo ./install.sh && cd ../.. && rm -rf linux-resource-main)"
+bash -c "$(curl -fsSL https://github.com/Henry54130/linux_resources/archive/refs/heads/main.tar.gz | tar -xz && cd linux_resources-main/input-method && sudo ./install.sh && cd ../.. && rm -rf linux_resources-main)"
 ```
 
 ### 2. 僅安裝 Fcitx5 基礎框架（不含額外輸入法）
 ```bash
-bash -c "$(curl -fsSL https://github.com/Henry54130/linux-resource/archive/refs/heads/main.tar.gz | tar -xz && cd linux-resource-main/input-method && sudo ./install-fcitx5.sh && cd ../.. && rm -rf linux-resource-main)"
+bash -c "$(curl -fsSL https://github.com/Henry54130/linux_resources/archive/refs/heads/main.tar.gz | tar -xz && cd linux_resources-main/input-method && sudo ./install-fcitx5.sh && cd ../.. && rm -rf linux_resources-main)"
 ```
 
 ### 3. 僅安裝 小麥注音（會自動補裝 Fcitx5 依賴）
 ```bash
-bash -c "$(curl -fsSL https://github.com/Henry54130/linux-resource/archive/refs/heads/main.tar.gz | tar -xz && cd linux-resource-main/input-method && sudo ./install-mcbopomofo.sh && cd ../.. && rm -rf linux-resource-main)"
+bash -c "$(curl -fsSL https://github.com/Henry54130/linux_resources/archive/refs/heads/main.tar.gz | tar -xz && cd linux_resources-main/input-method && sudo ./install-mcbopomofo.sh && cd ../.. && rm -rf linux_resources-main)"
 ```
 
 ### 4. 僅安裝 拼音（會自動補裝 Fcitx5 依賴）
 ```bash
-bash -c "$(curl -fsSL https://github.com/Henry54130/linux-resource/archive/refs/heads/main.tar.gz | tar -xz && cd linux-resource-main/input-method && sudo ./install-pinyin.sh && cd ../.. && rm -rf linux-resource-main)"
+bash -c "$(curl -fsSL https://github.com/Henry54130/linux_resources/archive/refs/heads/main.tar.gz | tar -xz && cd linux_resources-main/input-method && sudo ./install-pinyin.sh && cd ../.. && rm -rf linux_resources-main)"
 ```
 
 ---

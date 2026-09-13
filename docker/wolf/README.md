@@ -1,8 +1,7 @@
 ## 1. 安裝指令
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Henry54130/linux_resources/main/install.sh | bash
-
+curl -fsSL https://raw.githubusercontent.com/Henry54130/linux_resources/main/docker/wolf/install.sh | bash
 ```
 
 ---
