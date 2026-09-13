@@ -1,6 +1,5 @@
-# 社團電腦維護與部署系統 (Club Linux Deployment & Rescue System)
 
-針對社團共用電腦（Linux Mint XFCE / Windows 雙系統環境）設計的自動化維護工具組。
+針對共用電腦（Linux Mint XFCE ）設計的自動化維護工具組。
 
 ---
 
