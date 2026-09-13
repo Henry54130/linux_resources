@@ -1,0 +1,1 @@
+template ALL=(ALL) NOPASSWD: /usr/local/bin/update-guest-template
