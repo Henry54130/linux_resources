@@ -1,41 +1,42 @@
-## 1. 安裝指令
+
+
+## 1. 快速安裝
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Henry54130/linux_resources/main/docker/wolf/install.sh | bash
+
 ```
 
----
+## 2. 解決痛點（微調原因）
 
-## 2. 效果
+官方映像檔存在以下限制，難以直接作為日常開發與生產力環境使用：
 
-新增官方無法持久化的設定
-* **軟體套件**：
-* Brave 瀏覽器
-* VSCodium 編輯器
-* Obsidian 筆記軟體
-* LibreOffice（含繁中）
-* GNOME System Monitor
-* Google Noto CJK 繁中字型
+* **缺少繁中環境**：無 CJK 中文字型與語系支援，介面與網頁易缺字、破音字或亂碼。
+* **無生產力工具**：預設未內建常用瀏覽器、編輯器與辦公套件。
+* **桌面無法持久化**：重啟後個人化桌面偏好與系統設定容易重置。
+* **權限管理不便**：容器啟動時隨機指派 root 密碼，難以快速取得管理權限進行配置。
+
+## 3. 功能特色
+
+* **開箱即用的生產力軟體**：
+* **瀏覽器**：Brave Browser
+* **編輯與筆記**：VSCodium、Obsidian
+* **辦公套件**：LibreOffice（含繁體中文語系包）
+* **系統工具**：GNOME System Monitor
+* **字型支援**：Google Noto Sans CJK TC 繁體中文字型
 
 
-* **系統權限**：
-* 映射宿主機同名使用者與 UID/GID
-* 容器內免密碼 `sudo`
+* **無縫權限與持久化整合**：
+* 自動映射宿主機目前使用者的帳號名稱與 UID/GID，避免掛載檔案權限衝突。
+* 容器內提供免密碼 `sudo` 權限，便於開發除錯。
 
----
 
-## 3. 微調原因
-官方映像檔中
-* 無中文支援、無字型
-* 無生產力軟體
-* 桌面設定無法持久化
-* 每次root密碼都會變（難以進行開發）
+## 4. 專案架構
 
-## 4. 架構
+| 檔案 | 角色 | 說明 |
+| --- | --- | --- |
+| `Dockerfile.xfce` | 映像檔建置 | 以官方映像檔為基底，預先安裝常用工具、配置中文字型與使用者權限 |
+| `docker-compose.yml` | 服務編排 | 整合官方 Wolf 服務與自訂 XFCE 桌面，提供可持久化的串流遠端桌面環境 |
+| `install.sh` | 自動化腳本 | 檢查 Docker 環境、下載相關配置檔並自動啟動容器服務 |
 
-|檔案|功用|說明|
-|----|----|----|
-|Dockerfile.xfce|客製化持久系統|以官方映像檔為基底，設定密碼、安裝基本程式|
-|docker-compose.yml|拉取官方wolf img,結合上者形成較好用的遠端桌面|
-|install.sh|全自動安裝|檢查docker指令、下載所需檔案並執行docker compose|
 
