@@ -13,22 +13,27 @@ if ! command -v rclone &>/dev/null; then
 fi
 
 echo "==> Checking if '${REMOTE_NAME}' remote exists in rclone..."
-if ! rclone listremotes | grep -q "^${REMOTE_NAME}:"; then
+if ! rclone listremotes | grep -qi "^${REMOTE_NAME}:"; then
     echo ""
-    echo "Warning: Remote '${REMOTE_NAME}:' was not found in your rclone config."
-    echo "Please configure it by running:"
-    echo "    rclone config"
-    echo "Choose 'New remote', name it '${REMOTE_NAME}', select 'WebDAV' (type: webdav),"
-    echo "set vendor to 'nextcloud', then enter your Nextcloud server URL"
-    echo "(e.g. https://your-domain/remote.php/dav/files/USERNAME/), username and password."
+    echo "Remote '${REMOTE_NAME}:' was not found. Let's set it up."
+    echo "(If you have 2FA enabled, create an app password first under"
+    echo "Nextcloud Settings > Security, and paste that in below instead"
+    echo "of your login password.)"
     echo ""
-    read -rp "Do you want to run 'rclone config' now? (y/N): " choice
-    if [[ "$choice" =~ ^[Yy]$ ]]; then
-        rclone config
-    else
-        echo "Exiting. Please configure '${REMOTE_NAME}' first."
-        exit 1
-    fi
+    read -rp "Nextcloud URL (e.g. https://cloud.example.com): " nc_url
+    nc_url="${nc_url%/}"
+    read -rp "Nextcloud username: " nc_user
+    read -rsp "Nextcloud password (or app password): " nc_password
+    echo ""
+
+    echo "==> Creating rclone remote '${REMOTE_NAME}'..."
+    rclone config create "${REMOTE_NAME}" webdav \
+        url "${nc_url}/remote.php/dav/files/${nc_user}/" \
+        vendor nextcloud \
+        user "${nc_user}" \
+        pass "${nc_password}" \
+        --obscure
+    unset nc_password
 fi
 
 echo "==> Creating mount directory at ${MOUNT_DIR}..."

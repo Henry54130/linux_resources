@@ -52,7 +52,6 @@ ExecStart=/usr/bin/rclone mount gdrive: %h/rclone/gdrive \
   --vfs-cache-mode writes \
   --vfs-cache-max-size 10G \
   --dir-cache-time 72h \
-  --drive-export-dir "" \
   --vfs-read-chunk-size 32M
 ExecStop=/bin/fusermount -u %h/rclone/gdrive
 Restart=on-failure
