@@ -106,6 +106,7 @@ vfs_cache_mode="${RCLONE_VFS_CACHE_MODE:-full}"
 dir_cache_time="${RCLONE_DIR_CACHE_TIME:-10s}"
 allow_other="${RCLONE_ALLOW_OTHER:-false}"
 log_dir="${RCLONE_LOG_DIR:-/tmp/rclone-batch-mounts}"
+mount_timeout="${RCLONE_MOUNT_TIMEOUT:-30}"
 
 if [[ ! "$mount_uid" =~ ^[0-9]+$ ]]; then
   printf 'Error: Invalid MOUNT_UID: %s\n' "$mount_uid" >&2
@@ -115,6 +116,11 @@ if [[ ! "$mount_gid" =~ ^[0-9]+$ ]]; then
   printf 'Error: Invalid MOUNT_GID: %s\n' "$mount_gid" >&2
   exit 1
 fi
+if [[ ! "$mount_timeout" =~ ^[0-9]+$ || "$mount_timeout" -le 0 ]]; then
+  printf 'Error: Invalid RCLONE_MOUNT_TIMEOUT: %s (must be a positive integer)\n' "$mount_timeout" >&2
+  exit 1
+fi
+mount_timeout=$((10#$mount_timeout))
 
 # 4. 遠端清單獲取與驗證
 raw_remotes=()
@@ -215,7 +221,7 @@ start_mount() {
   fi
 
   local mounted=false
-  for _ in {1..10}; do
+  for ((i = 0; i < mount_timeout; i++)); do
     if mountpoint -q "$local_path" && kill -0 "$last_child_pid" 2>/dev/null; then
       mounted=true
       break
@@ -223,7 +229,7 @@ start_mount() {
     if ! kill -0 "$last_child_pid" 2>/dev/null; then
       break
     fi
-    sleep 0.5
+    sleep 1
   done
 
   if [[ "$mounted" == true ]]; then
@@ -267,7 +273,7 @@ if [[ "$mode" == "daemon" ]]; then
     if start_mount "$remote" "$local_path" "$remote_log"; then
       printf '[Success] %s mounted at %s (PID: %d)\n' "$remote" "$local_path" "$last_child_pid"
     else
-      printf '[Failed] %s mount failed. See log: %s\n' "$remote" "$remote_log" >&2
+      printf '[Failed] %s mount failed or timed out (%ds). See log: %s\n' "$remote" "$mount_timeout" "$remote_log" >&2
       failed_count=$((failed_count + 1))
     fi
   done
@@ -354,7 +360,7 @@ elif [[ "$mode" == "foreground" ]]; then
     if start_mount "$remote" "$local_path" "$remote_log"; then
       printf '[Success] %s mounted at %s (PID: %d)\n' "$remote" "$local_path" "$last_child_pid"
     else
-      printf '[Failed] %s mount failed. See log: %s\n' "$remote" "$remote_log" >&2
+      printf '[Failed] %s mount failed or timed out (%ds). See log: %s\n' "$remote" "$mount_timeout" "$remote_log" >&2
       cleanup_foreground
       exit 1
     fi

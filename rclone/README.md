@@ -26,7 +26,7 @@ curl -fsSL https://github.com/Henry54130/linux_resources/archive/refs/heads/main
 ```
 
 ### 4. 設定 Nextcloud 掛載（掛載至 `~/rclone/nextcloud`）
-> 若尚未設定 `nextcloud` remote，腳本會問你 Nextcloud 網址、帳號、密碼，並呼叫 Nextcloud 的 `getapppassword` API 自動換一個名為 `rclone_{主機名}_{帳號}` 的 App Password 來建立 remote——不會把你的主密碼存到任何地方，也不會再跑互動式的 `rclone config` 精靈（避免手動編輯誤改欄位）。若帳號有開 2FA，API 交換可能失敗，需改到 Nextcloud 網頁的 Security 設定手動建立 App Password。
+> 若尚未設定 `nextcloud` remote，腳本會直接問你 Nextcloud 網址、帳號、密碼（可填登入密碼或自行在 Nextcloud 網頁 Security 設定建立的 App Password），用 `rclone config create --obscure` 非互動建立 remote，不會再跑容易誤改欄位的 `rclone config` 編輯精靈。
 ```bash
 curl -fsSL https://github.com/Henry54130/linux_resources/archive/refs/heads/main.tar.gz | tar -xz && cd linux_resources-main/rclone && ./setup-nextcloud.sh && cd ../.. && rm -rf linux_resources-main
 ```
@@ -47,7 +47,7 @@ cd rclone
 sudo ./install-rclone.sh        # 安裝 rclone + fuse3
 ./setup-onedrive.sh             # 掛載 OneDrive（需先 rclone config 設定 onedrive remote）
 ./setup-google-drive.sh         # 掛載 Google Drive（需先 rclone config 設定 gdrive remote）
-./setup-nextcloud.sh            # 掛載 Nextcloud（會互動問帳密並自動取得 App Password）
+./setup-nextcloud.sh            # 掛載 Nextcloud（會互動問帳密，可填登入密碼或 App Password）
 cp .env.example .env && vim .env  # 填入 Nextcloud WebDAV 帳密與掛載路徑
 ./setup-agent-workspace.sh      # 以系統服務掛載 Agent Workspace（WebDAV 直連，會要求 sudo）
 ./rclone_mount_batch.sh         # 批次掛載 .env 指定（或全部已設定）的 remote
