@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MOUNT_DIR="${HOME}/OneDrive"
+MOUNT_DIR="${HOME}/rclone/onedrive"
 SERVICE_DIR="${HOME}/.config/systemd/user"
 SERVICE_FILE="${SERVICE_DIR}/rclone-onedrive.service"
 
@@ -23,13 +23,13 @@ Wants=network-online.target
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/rclone mount onedrive: %h/OneDrive \
+ExecStart=/usr/bin/rclone mount onedrive: %h/rclone/onedrive \
   --config=%h/.config/rclone/rclone.conf \
   --vfs-cache-mode writes \
   --vfs-cache-max-size 10G \
   --dir-cache-time 72h \
   --vfs-read-chunk-size 32M
-ExecStop=/bin/fusermount -u %h/OneDrive
+ExecStop=/bin/fusermount -u %h/rclone/onedrive
 Restart=on-failure
 RestartSec=10
 

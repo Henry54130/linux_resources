@@ -42,7 +42,7 @@ set -a
 . "$env_file"
 set +a
 
-workspace_path="${AGENT_WORKSPACE:-/home/huang/DATA/agent-mount}"
+workspace_path="${AGENT_WORKSPACE:-$HOME/rclone/agent-workspace}"
 mkdir -p -- "$workspace_path"
 chmod +x -- "$mount_script"
 

@@ -10,7 +10,7 @@ if [[ -f "$env_file" ]]; then
   set +a
 fi
 
-workspace_path="${AGENT_WORKSPACE:-/home/huang/DATA/agent-mount}"
+workspace_path="${AGENT_WORKSPACE:-$HOME/rclone/agent-workspace}"
 mount_uid="${MOUNT_UID:-1000}"
 mount_gid="${MOUNT_GID:-1000}"
 
