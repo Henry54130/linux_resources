@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REMOTE_NAME="gdrive"
-MOUNT_DIR="${HOME}/GoogleDrive"
+MOUNT_DIR="${HOME}/rclone/${REMOTE_NAME}"
 SERVICE_DIR="${HOME}/.config/systemd/user"
 SERVICE_FILE="${SERVICE_DIR}/rclone-gdrive.service"
 
@@ -47,14 +47,14 @@ Wants=network-online.target
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/rclone mount gdrive: %h/GoogleDrive \
+ExecStart=/usr/bin/rclone mount gdrive: %h/rclone/gdrive \
   --config=%h/.config/rclone/rclone.conf \
   --vfs-cache-mode writes \
   --vfs-cache-max-size 10G \
   --dir-cache-time 72h \
   --drive-export-dir "" \
   --vfs-read-chunk-size 32M
-ExecStop=/bin/fusermount -u %h/GoogleDrive
+ExecStop=/bin/fusermount -u %h/rclone/gdrive
 Restart=on-failure
 RestartSec=10
 
