@@ -1,22 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "==> Checking if rclone is installed..."
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+. "$script_dir/lib/log.sh"
+
+log "==> Checking if rclone is installed..."
 if ! command -v rclone &>/dev/null; then
-    echo "Error: rclone is not installed. Please install it first (e.g., ./install-rclone.sh)."
+    log "Error: rclone is not installed. Please install it first (e.g., ./install-rclone.sh)."
     exit 1
 fi
 
-# Detect the Google Drive remote by its type ('drive'), so the folder and
-# mount source follow whatever name you gave it in `rclone config`.
-detect_remote() {
+# Detect EVERY Google Drive remote by its type ('drive'). Each remote — whatever
+# name you gave it in `rclone config` — gets its own mount dir (~/rclone/<name>)
+# and its own systemd service (rclone-<name>.service), so multiple Drive
+# accounts can be mounted side by side without clobbering each other.
+detect_remotes() {
     rclone listremotes --long 2>/dev/null \
-        | awk 'tolower($NF)=="drive"{sub(/:$/,"",$1); print $1; exit}'
+        | awk 'tolower($NF)=="drive"{sub(/:$/,"",$1); print $1}'
 }
 
-echo "==> Detecting Google Drive remote from rclone config..."
-REMOTE_NAME="$(detect_remote)"
-if [ -z "${REMOTE_NAME}" ]; then
+log "==> Detecting Google Drive remote(s) from rclone config..."
+mapfile -t REMOTES < <(detect_remotes)
+if [ "${#REMOTES[@]}" -eq 0 ]; then
     echo ""
     echo "No remote of type 'drive' was found in your rclone config."
     echo "In 'rclone config': choose 'New remote', pick any name, select"
@@ -25,33 +30,46 @@ if [ -z "${REMOTE_NAME}" ]; then
     read -rp "Do you want to run 'rclone config' now? (y/N): " choice
     if [[ "$choice" =~ ^[Yy]$ ]]; then
         rclone config
-        REMOTE_NAME="$(detect_remote)"
+        mapfile -t REMOTES < <(detect_remotes)
     fi
 fi
-if [ -z "${REMOTE_NAME}" ]; then
-    echo "Error: no Google Drive remote available. Exiting." >&2
+if [ "${#REMOTES[@]}" -eq 0 ]; then
+    log "Error: no Google Drive remote available. Exiting."
     exit 1
 fi
-echo "==> Using Google Drive remote: ${REMOTE_NAME}"
+log "==> Found ${#REMOTES[@]} Google Drive remote(s): ${REMOTES[*]}"
 
-MOUNT_DIR="${HOME}/rclone/${REMOTE_NAME}"
 SERVICE_DIR="${HOME}/.config/systemd/user"
-# Service name stays fixed regardless of the remote name.
-SERVICE_FILE="${SERVICE_DIR}/rclone-gdrive.service"
-
-echo "==> Creating mount directory at ${MOUNT_DIR}..."
-mkdir -p "${MOUNT_DIR}"
-
-echo "==> Creating systemd user service directory..."
+log "==> Creating systemd user service directory..."
 mkdir -p "${SERVICE_DIR}"
 
-echo "==> Unmounting existing Google Drive mount if present..."
-fusermount -u "${MOUNT_DIR}" 2>/dev/null || true
+# Linger is a per-user setting, so enable it once rather than per-remote.
+log "==> Enabling linger so the mounts start at boot (no desktop login needed)..."
+if loginctl show-user "$USER" 2>/dev/null | grep -q "Linger=yes"; then
+    log "    Linger already enabled for ${USER}."
+elif sudo loginctl enable-linger "$USER"; then
+    log "    Linger enabled for ${USER}."
+else
+    log "    [action needed] run once to mount on boot without login:"
+    log "        sudo loginctl enable-linger $USER"
+fi
 
-echo "==> Creating systemd service file at ${SERVICE_FILE}..."
-cat << EOF > "${SERVICE_FILE}"
+# One service file per remote.
+for REMOTE_NAME in "${REMOTES[@]}"; do
+    MOUNT_DIR="${HOME}/rclone/${REMOTE_NAME}"
+    SERVICE_FILE="${SERVICE_DIR}/rclone-${REMOTE_NAME}.service"
+
+    log ""
+    log "==> [${REMOTE_NAME}] Creating mount directory at ${MOUNT_DIR}..."
+    mkdir -p "${MOUNT_DIR}"
+
+    log "==> [${REMOTE_NAME}] Unmounting existing mount if present..."
+    fusermount -u "${MOUNT_DIR}" 2>/dev/null || true
+
+    log "==> [${REMOTE_NAME}] Writing systemd service file at ${SERVICE_FILE}..."
+    cat << EOF > "${SERVICE_FILE}"
 [Unit]
-Description=RClone Google Drive Mount Service
+Description=RClone Google Drive Mount Service (${REMOTE_NAME})
 After=network-online.target
 Wants=network-online.target
 
@@ -70,15 +88,34 @@ RestartSec=10
 [Install]
 WantedBy=default.target
 EOF
+done
 
-echo "==> Reloading systemd user daemon..."
+log "==> Reloading systemd user daemon..."
 systemctl --user daemon-reload
 
-echo "==> Enabling and starting rclone-gdrive.service..."
-systemctl --user enable --now rclone-gdrive.service
+# Enable + start each service, then capture a per-remote diagnostics snapshot.
+for REMOTE_NAME in "${REMOTES[@]}"; do
+    MOUNT_DIR="${HOME}/rclone/${REMOTE_NAME}"
+    SERVICE_NAME="rclone-${REMOTE_NAME}.service"
 
-echo "==> Checking service status..."
-systemctl --user status rclone-gdrive.service --no-pager
+    log ""
+    log "==> Enabling and starting ${SERVICE_NAME}..."
+    systemctl --user enable --now "${SERVICE_NAME}"
 
-echo ""
-echo "==> Setup complete! Your Google Drive is mounted at ${MOUNT_DIR}"
+    log "==> [${REMOTE_NAME}] Capturing diagnostics snapshot for debugging..."
+    {
+        echo "---- systemctl status ${SERVICE_NAME} ----"
+        systemctl --user status "${SERVICE_NAME}" --no-pager || true
+        echo "---- journalctl (last 30 lines) ----"
+        journalctl --user -u "${SERVICE_NAME}" -n 30 --no-pager -l || true
+        echo "---- mount check ----"
+        mountpoint "${MOUNT_DIR}" 2>&1 || true
+        echo "---- dir listing (first 20) ----"
+        ls -la "${MOUNT_DIR}" 2>&1 | head -20 || true
+    } 2>&1 | tee -a "$LOG_FILE"
+done
+
+log ""
+log "==> Setup complete! Mounted ${#REMOTES[@]} Google Drive remote(s) under ~/rclone/"
+log "==> Full run log + diagnostics saved to: ${LOG_FILE}"
+log "==> If something looks wrong, just paste the contents of that file."
